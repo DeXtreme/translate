@@ -3,7 +3,9 @@ import json
 import logging
 from dataclasses import dataclass
 from typing import Dict, Any
-from .ports import TextPersistencePort, TranslationPort, DynamoDBPersistencePort, AWSTranslatePort
+
+from .ports import TextPersistencePort, TranslationPort
+from .adapters import DynamoDBPersistenceAdapter, AWSTranslateAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +95,7 @@ class Handler:
         return {"statusCode": str(status_code), "body": json.dumps({"detail": error})}
 
 
-text_port = DynamoDBPersistencePort(os.environ.get("DYNAMODB_TABLE"))
-translate_port = AWSTranslatePort()
+text_port = DynamoDBPersistenceAdapter(os.environ.get("DYNAMODB_TABLE"))
+translate_port = AWSTranslateAdapter()
 
 handler = Handler(text_port,translate_port)
