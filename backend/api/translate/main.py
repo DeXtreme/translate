@@ -4,8 +4,8 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, Any
 
-from .ports import TextPersistencePort, TranslationPort
-from .adapters import DynamoDBPersistenceAdapter, AWSTranslateAdapter
+from ports import TextPersistencePort, TranslationPort
+from adapters import DynamoDBPersistenceAdapter, AWSTranslateAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class TranslationRequest:
     lang: str
 
     @classmethod
-    def from_dict(cls, data: Dict[str:Any]) -> "TranslationRequest":
+    def from_dict(cls, data: Dict[str, Any]) -> "TranslationRequest":
         if not isinstance(data["text"], str):
             raise ValueError("text must be a string")
 
@@ -39,7 +39,7 @@ class Handler:
         self.text_port = text_port
         self.translate_port = translate_port
 
-    def __call__(self, request):
+    def __call__(self, request, *args):
         """
         Process a translation request.
 
@@ -53,7 +53,7 @@ class Handler:
         try:
             body: dict = json.loads(request["body"])
             request = TranslationRequest.from_dict(body)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError) as e:
             logger.error(f"Invalid request: {str(e)}")
             return self._get_error_response("Invalid request", status_code=400)
 
@@ -98,4 +98,4 @@ class Handler:
 text_port = DynamoDBPersistenceAdapter(os.environ.get("DYNAMODB_TABLE"))
 translate_port = AWSTranslateAdapter()
 
-handler = Handler(text_port,translate_port)
+handler = Handler(text_port, translate_port)
