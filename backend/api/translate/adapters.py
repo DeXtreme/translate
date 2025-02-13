@@ -2,7 +2,8 @@ import boto3
 from uuid import uuid4
 from datetime import datetime
 
-from .models import Record
+from models import Record
+
 
 class DynamoDBPersistenceAdapter:
     """

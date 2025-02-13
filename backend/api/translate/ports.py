@@ -1,5 +1,5 @@
 from typing import Protocol
-from .models import Record
+from models import Record
 
 
 class TextPersistencePort(Protocol):
@@ -10,5 +10,3 @@ class TextPersistencePort(Protocol):
 class TranslationPort(Protocol):
     def translate(self, text: str, lang: str) -> str:
         pass
-
-

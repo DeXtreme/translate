@@ -3,7 +3,7 @@ import base64
 from uuid import uuid4
 from datetime import datetime
 
-from .models import Record
+from models import Record
 
 
 class RequestPersistenceAdapter:
@@ -30,9 +30,8 @@ class RequestPersistenceAdapter:
         id = str(uuid4())
         created_at = datetime.now()
 
-        input_text = base64.b64encode(input)
-        output_text = base64.b64encode(output)
-
+        input_text = base64.b64encode(input).decode()
+        output_text = base64.b64encode(output).decode()
 
         self.table.put_item(
             Item={
@@ -55,9 +54,8 @@ class FilePersistenceAdpater:
     def __init__(self, bucket_name: str):
         self.client = boto3.client("s3")
         self.bucket_name = bucket_name
-    
 
-    def save(self, file: bytes) -> str:
+    def save(self, file: bytes, extension: str) -> str:
         """
         Save file as object in S3 bucket
 
@@ -68,25 +66,19 @@ class FilePersistenceAdpater:
             The url to the file
         """
 
-        key = str(uuid4()).replace("-","")
+        key = str(uuid4()).replace("-", "")
+        if extension:
+            key += f".{extension}"
 
-        response = self.client.put_object(
-            Key = key,
-            Body = file,
-            Bucket = self.bucket_name
-        )
+        response = self.client.put_object(Key=key, Body=file, Bucket=self.bucket_name)
 
         url = self.client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': self.bucket_name, 'Key': key},
-            ExpiresIn=60
+            "get_object", Params={"Bucket": self.bucket_name, "Key": key}, ExpiresIn=300
         )
 
         return url
 
-        
 
-        
 class AWSTranslateAdapter:
     """
     Implementation of TranslationPort using AWSTranslate.
@@ -95,7 +87,7 @@ class AWSTranslateAdapter:
     def __init__(self):
         self.client = boto3.client("translate")
 
-    def translate(self, file: bytes, lang: str) -> bytes:
+    def translate(self, file: bytes, content_type: str, lang: str) -> bytes:
         """
         Translate input file to lang
 
@@ -107,12 +99,8 @@ class AWSTranslateAdapter:
             The translated file
         """
 
-
         result = self.client.translate_document(
-            Document={
-                'Content': file,
-                'ContentType': 'text/plain'
-            },
+            Document={"Content": file, "ContentType": content_type},
             SourceLanguageCode="auto",
             TargetLanguageCode=lang,
         )
