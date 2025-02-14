@@ -78,7 +78,14 @@ class Handler:
             Dictionary with status code and response body
         """
 
-        return {"statusCode": "200", "body": json.dumps({"result": text})}
+        return {
+            "statusCode": "200", 
+            "headers": {
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            },
+            "body": json.dumps({"result": text})}
 
     def _get_error_response(self, error: str, status_code: int):
         """
@@ -92,7 +99,13 @@ class Handler:
             Dictionary with status code and response body
         """
 
-        return {"statusCode": str(status_code), "body": json.dumps({"detail": error})}
+        return {"statusCode": str(status_code),
+                "headers": {
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+                },
+                "body": json.dumps({"detail": error})}
 
 
 text_port = DynamoDBPersistenceAdapter(os.environ.get("DYNAMODB_TABLE"))

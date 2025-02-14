@@ -41,7 +41,8 @@ class TranslationRequest:
     @classmethod
     def from_dict(cls, data: Dict) -> "TranslationRequest":
         body = data["body"]
-        content_type = data["headers"]["Content-Type"]
+        content_type = data["headers"].get("content-type", None) or data[
+            "headers"].get("Content-Type", None)
 
         files = []
         lang = ""
@@ -96,7 +97,7 @@ class Handler:
         try:
             request = TranslationRequest.from_dict(request)
         except (json.JSONDecodeError, KeyError) as e:
-            logger.error(f"Invalid request: {str(e)}")
+            logger.exception(f"Invalid request: {str(e)}")
             return self._get_error_response("Invalid request", status_code=400)
 
         urls = []
@@ -126,7 +127,13 @@ class Handler:
             Dictionary with status code and response body
         """
 
-        return {"statusCode": "200", "body": json.dumps({"urls": urls})}
+        return {"statusCode": "200", 
+                "headers": {
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "OPTIONS,POST"
+                },
+                "body": json.dumps({"urls": urls})}
 
     def _get_error_response(self, error: str, status_code: int):
         """
@@ -140,7 +147,13 @@ class Handler:
             Dictionary with status code and response body
         """
 
-        return {"statusCode": str(status_code), "body": json.dumps({"detail": error})}
+        return {"statusCode": str(status_code),
+                "headers": {
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "OPTIONS,POST"
+                },
+                "body": json.dumps({"detail": error})}
 
 
 request_port = RequestPersistenceAdapter(os.environ.get("DYNAMODB_TABLE"))
