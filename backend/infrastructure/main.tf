@@ -6,7 +6,7 @@ data "aws_region" "this" {}
 resource "aws_api_gateway_rest_api" "this" {
   name               = "translate-app-api"
   description        = "The translate app API"
-  binary_media_types = ["*/*"]
+  binary_media_types = ["multipart/form-data"]
   tags               = local.tags
 }
 
@@ -21,7 +21,6 @@ resource "aws_api_gateway_method" "translate" {
   resource_id   = aws_api_gateway_resource.translate.id
   http_method   = "POST"
   authorization = "NONE"
-
 }
 
 resource "aws_api_gateway_integration" "translate" {
@@ -67,6 +66,7 @@ resource "aws_api_gateway_deployment" "this" {
 
   triggers = {
     redeployment = sha1(jsonencode([
+      aws_api_gateway_rest_api.this,
       aws_api_gateway_resource.translate,
       aws_api_gateway_method.translate,
       aws_api_gateway_integration.translate,
